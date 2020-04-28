@@ -3,6 +3,7 @@
 namespace AwsBucket;
 
 use Aws\S3\S3Client;
+use Ulid\Ulid;
 
 class AwsBucket
 {
@@ -26,18 +27,18 @@ class AwsBucket
      */
     public function putFile($content, $name, $extension)
     {
-        $fileName = md5(rand(1, 999) . $name);
+        $ulid = $this->newUlid();
+        $hash =  $ulid->generate();
 
         $s3Client = $this->newS3Client();
 
         $result = $s3Client->putObject([
             'Bucket' => $this->s3Config['bucket'],
-            'Key' => $fileName .'.'. $extension,
+            'Key' => $hash . '.' . $name . '.' . $extension,
             'Body' => $content,
-            'ContentType' => 'text/csv',
             'ACL' => 'public-read',
         ])->toArray();
-        
+
         return $result['ObjectURL'];
     }
 
@@ -50,13 +51,14 @@ class AwsBucket
      */
     public function putFileOrigin($origin, $name, $extension, $contentType = null)
     {
-        $fileName = md5(rand(1, 999) . $name);
+        $ulid = $this->newUlid();
+        $hash =  $ulid->generate();
 
         $s3Client = $this->newS3Client();
 
         $s3Config = [
             'Bucket' => $this->s3Config['bucket'],
-            'Key' => $fileName .'.'. $extension,
+            'Key' => $hash . '-' . $name . '.' . $extension,
             'SourceFile' => $origin,
             'ACL' => 'public-read',
         ];
@@ -66,7 +68,7 @@ class AwsBucket
         }
 
         $result = $s3Client->putObject($s3Config)->toArray();
-        
+
         return $result['ObjectURL'];
     }
 
@@ -107,5 +109,16 @@ class AwsBucket
     public function newS3Client()
     {
         return new S3Client($this->s3Config);
+    }
+
+    /**
+     * @codeCoverageIgnore
+     * method newS3Client
+     * create Ulid instance
+     * @return \Ulid\Ulid
+     */
+    public function newUlid()
+    {
+        return new Ulid();
     }
 }

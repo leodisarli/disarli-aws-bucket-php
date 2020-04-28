@@ -6,6 +6,7 @@ use \Mockery;
 use Aws\S3\S3Client;
 use AwsBucket\AwsBucket;
 use PHPUnit\Framework\TestCase;
+use Ulid\Ulid;
 
 class AwsBucketHelperTest extends TestCase
 {
@@ -28,6 +29,11 @@ class AwsBucketHelperTest extends TestCase
             'ObjectURL' => 'https://url/file.ext',
         ];
 
+        $ulidMock = Mockery::mock(Ulid::class);
+        $ulidMock->shouldReceive('generate')
+            ->once()
+            ->andReturn('01E7110R431SMD2V7WGMSVHDVK');
+
         $sqsClientMock = Mockery::mock(S3Client::class);
         $sqsClientMock->shouldReceive('putObject')
             ->once()
@@ -46,6 +52,10 @@ class AwsBucketHelperTest extends TestCase
         $awsBucketPartialMock->shouldReceive('newS3Client')
             ->once()
             ->andReturn($sqsClientMock);
+
+        $awsBucketPartialMock->shouldReceive('newUlid')
+            ->once()
+            ->andReturn($ulidMock);
 
         $content = 'this is your file content';
         $name = 'sample';
@@ -64,6 +74,11 @@ class AwsBucketHelperTest extends TestCase
             'ObjectURL' => 'https://url/file.ext',
         ];
 
+        $ulidMock = Mockery::mock(Ulid::class);
+        $ulidMock->shouldReceive('generate')
+            ->once()
+            ->andReturn('01E7110R431SMD2V7WGMSVHDVK');
+
         $sqsClientMock = Mockery::mock(S3Client::class);
         $sqsClientMock->shouldReceive('putObject')
             ->once()
@@ -83,11 +98,16 @@ class AwsBucketHelperTest extends TestCase
             ->once()
             ->andReturn($sqsClientMock);
 
+        $awsBucketPartialMock->shouldReceive('newUlid')
+            ->once()
+            ->andReturn($ulidMock);
+
         $origin = 'sample.txt';
         $name = 'sample';
         $extension = 'txt';
+        $contentType = 'text/plain';
 
-        $file = $awsBucketPartialMock->putFileOrigin($origin, $name, $extension);
+        $file = $awsBucketPartialMock->putFileOrigin($origin, $name, $extension, $contentType);
         $this->assertEquals($file, 'https://url/file.ext');
     }
 
